@@ -1,0 +1,70 @@
+TabelaDistPostosSinalizados[n_] :=
+TableForm[
+Table[{Range[0, (n*(n+1))/2][[t]],
+2^(n*(n-1))*CoefficientList[Expand[Product[(1+s^k)/2^n, {k, 1, n}]], s][[t]]},
+{t, 1, n*(n+1)/2+1}],
+TableHeadings -> {None, {"T+", "probabilidade"}}]
+
+f[v_] := Piecewise[{{1, -(3/10) < v < 7/10}}, 0];
+fminus[v_] := Piecewise[{{1, -(7/10) < v < 3/10}}, 0];
+H[0, u_, x_] := 1;
+H[n_, u_, x_] :=
+PiecewiseExpand[
+n (x^n Integrate[PiecewiseExpand[H[n - 1, v, x] f[v]], {v, 0, u}, Assumptions -> u > 0]
++ Integrate[PiecewiseExpand[H[n - 1, v, x] fminus[v]], {v, 0, u}, Assumptions -> u > 0]) Piecewise[{{0, u < 0}}, 1]]
+
+TabelaDistPostosSinalizadosNaoNula[n_] :=
+TableForm[
+Table[{Range[0, (n*(n+1))/2][[t]],
+CoefficientList[Expand[H[n, \[Infinity], s]], s][[t]]},
+{t, 1, (n*(n+1))/2+1}],
+TableHeadings -> {None, {"T+", "probabilidade"}}]
+
+xlist[k_] := Table[ x[i], {i, 1, k}];
+ylist[k_] := Table[y[i], {i, 1, k}];
+p[1, k_] := xlist[k].ylist[k];
+p[n_, k_] := p[n, k] = p[n - 1, k] xlist[k].ylist[k]^n
+p [{n1_}] := y[1]^(n1 ( n1 + 1)/ 2);
+
+p[nlist_] := p[nlist] =
+Module[{n, k, id, nlistnew, pos, sub},
+n = Apply[Plus, nlist];
+k = Length[nlist];
+id = IdentityMatrix[k];
+nlistnew = Delete[nlist, Position[nlist, 0]];
+pos = Flatten[Position[nlist, j_ /; j > 0]];
+sub = Table[y[i] -> y[pos[[i]]], {i, 1, Length[pos]}];
+If[FreeQ[nlist, 0],
+Expand[Sum[y[i]^n p[nlist - id[[i]]], {i, 1, k}]],
+p[nlistnew] /. sub]]
+
+G[WilcoxonRS[n1_, n2_]] :=
+Apart[(p[{n1, n2}] /. {y[1] -> s, y[2] -> 1})/Binomial[n1 + n2, n1]]
+
+G[KruskalWallis[nlist_]] :=
+Module[{n, k, a, b, sub1, sub2},
+n = Apply[Plus, nlist];
+k = Length[nlist];
+a = 12/(n (n + 1));
+b = 3 (n + 1);
+s1 = Table[y[i]^r_ -> t^(r^2/nlist[[i]]), {i, 1, k}];
+s2 = t^x_ -> t^(a x - b);
+Apart[(p [nlist] /. s1 /. s2)/Apply[Multinomial, nlist]]]
+
+TabelaDistSomaPostos[n1_, n2_] :=
+TableForm[
+Table[{Range[n1*(n1+1)/2, n1*n2+n1*(n1+1)/2][[t]],
+DeleteCases[CoefficientList[G[WilcoxonRS[n1, n2]], s], 0][[t]]},
+{t, 1, n1*n2 + 1}],
+TableHeadings -> {None, {"T", "probabilidade"}}]
+
+
+TabelaDistKruskalWallis[nlist_] :=
+Module[{polinom, H, Pr},
+polinom = G[KruskalWallis[nlist]];
+H = Table[Exponent[polinom[[i]], t], {i, 1, Length[polinom]}];
+Pr = Coefficient[polinom, t, H];
+TableForm[
+Table[{H[[i]], Pr[[i]]},
+{i, 1, Length[H]}],
+TableHeadings -> {None, {"H", "Probabilidade"}}]]
