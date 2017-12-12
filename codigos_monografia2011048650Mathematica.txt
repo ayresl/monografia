@@ -58,7 +58,6 @@ DeleteCases[CoefficientList[G[WilcoxonRS[n1, n2]], s], 0][[t]]},
 {t, 1, n1*n2 + 1}],
 TableHeadings -> {None, {"T", "probabilidade"}}]
 
-
 TabelaDistKruskalWallis[nlist_] :=
 Module[{polinom, H, Pr},
 polinom = G[KruskalWallis[nlist]];
