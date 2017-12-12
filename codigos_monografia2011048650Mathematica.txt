@@ -68,3 +68,9 @@ TableForm[
 Table[{H[[i]], Pr[[i]]},
 {i, 1, Length[H]}],
 TableHeadings -> {None, {"H", "Probabilidade"}}]]
+
+N[PDF[TransformedDistribution[X1+X2, {X1\[Distributed]UniformDistribution[{-3/10, 7/10}], X2\[Distributed]UniformDistribution[{-3/10, 7/10}]}], 0]]
+
+N[PDF[TransformedDistribution[X1-X2, {X1\[Distributed]GammaDistribution[9/4, 180], X2\[Distributed]GammaDistribution[9/4, 180]}], 0]]
+
+N[Integrate[PDF[NormalDistribution[0, 3], x]^2, {x, -Infinity, Infinity}]]
